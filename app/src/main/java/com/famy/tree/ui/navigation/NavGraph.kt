@@ -13,6 +13,7 @@ import com.famy.tree.ui.screen.home.HomeScreen
 import com.famy.tree.ui.screen.members.MembersScreen
 import com.famy.tree.ui.screen.onboarding.OnboardingScreen
 import com.famy.tree.ui.screen.profile.ProfileScreen
+import com.famy.tree.ui.screen.relationship.AddRelationshipScreen
 import com.famy.tree.ui.screen.search.SearchScreen
 import com.famy.tree.ui.screen.settings.SettingsScreen
 import com.famy.tree.ui.screen.statistics.StatisticsScreen
@@ -199,6 +200,27 @@ fun FamyNavGraph(
         composable(NavRoutes.Settings.route) {
             SettingsScreen(
                 onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = NavRoutes.AddRelationship.route,
+            arguments = listOf(
+                navArgument("memberId") { type = NavType.LongType },
+                navArgument("relationshipType") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val memberId = backStackEntry.arguments?.getLong("memberId") ?: 0L
+            val relationshipType = backStackEntry.arguments?.getString("relationshipType") ?: "PARENT"
+            AddRelationshipScreen(
+                memberId = memberId,
+                relationshipType = relationshipType,
+                onNavigateBack = { navController.popBackStack() },
+                onCreateNewMember = {
+                    navController.popBackStack()
+                    val treeId = navController.currentBackStackEntry?.arguments?.getLong("treeId") ?: 0L
+                    navController.navigate(NavRoutes.EditMember.createRoute(treeId))
+                }
             )
         }
     }

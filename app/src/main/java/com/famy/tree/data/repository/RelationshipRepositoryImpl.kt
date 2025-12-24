@@ -72,6 +72,17 @@ class RelationshipRepositoryImpl @Inject constructor(
         return relationshipDao.getById(id)!!.toDomain()
     }
 
+    override suspend fun createRelationship(relationship: Relationship): Relationship {
+        return createRelationship(
+            memberId = relationship.memberId,
+            relatedMemberId = relationship.relatedMemberId,
+            type = relationship.type,
+            startDate = relationship.startDate,
+            startPlace = relationship.startPlace,
+            notes = relationship.notes
+        )
+    }
+
     override suspend fun deleteRelationship(relationshipId: Long) {
         val relationship = relationshipDao.getById(relationshipId) ?: return
         val inverseType = RelationshipType.getInverse(relationship.relationshipType)

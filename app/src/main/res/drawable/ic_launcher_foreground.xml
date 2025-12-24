@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Tree trunk forming the stem of letter F -->
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M48,85 L48,45 C48,43 49,42 51,42 L60,42 L60,46 L52,46 L52,85 C52,87 51,88 49,88 L51,88 C49,88 48,87 48,85 Z"/>
+
+    <!-- Top branch of F / Tree crown top -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M40,35 Q54,18 68,35 L62,35 Q54,28 46,35 Z"/>
+
+    <!-- Middle branch / Tree crown middle -->
+    <path
+        android:fillColor="#388E3C"
+        android:pathData="M38,45 Q54,25 70,45 L64,45 Q54,32 44,45 Z"/>
+
+    <!-- F horizontal bars integrated into tree -->
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M52,42 L68,42 L68,46 L52,46 Z"/>
+
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M52,54 L62,54 L62,58 L52,58 Z"/>
+
+    <!-- Root system suggesting family connections -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M42,85 Q50,92 50,88 M50,88 Q50,92 58,85"
+        android:strokeWidth="2"
+        android:strokeColor="#388E3C"/>
+
+    <!-- Small leaves/circles representing family members -->
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M42,38 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0"/>
+
+    <path
+        android:fillColor="#66BB6A"
+        android:pathData="M66,38 m-3,0 a3,3 0,1 1,6 0 a3,3 0,1 1,-6 0"/>
+
+    <path
+        android:fillColor="#81C784"
+        android:pathData="M54,28 m-4,0 a4,4 0,1 1,8 0 a4,4 0,1 1,-8 0"/>
+
+</vector>

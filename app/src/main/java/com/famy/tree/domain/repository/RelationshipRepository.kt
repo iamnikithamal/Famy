@@ -19,6 +19,7 @@ interface RelationshipRepository {
         startPlace: String? = null,
         notes: String? = null
     ): Relationship
+    suspend fun createRelationship(relationship: Relationship): Relationship
     suspend fun deleteRelationship(relationshipId: Long)
     suspend fun deleteAllRelationships(memberId: Long)
     suspend fun relationshipExists(memberId: Long, relatedMemberId: Long, type: RelationshipKind): Boolean
