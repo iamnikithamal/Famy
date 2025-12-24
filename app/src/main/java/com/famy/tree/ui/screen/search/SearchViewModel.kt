@@ -66,7 +66,7 @@ class SearchViewModel @Inject constructor(
             kotlinx.coroutines.flow.flowOf(emptyList())
         } else {
             _hasSearched.value = true
-            memberRepository.searchMembers(params.query).combine(
+            memberRepository.searchAllMembers(params.query).combine(
                 kotlinx.coroutines.flow.flowOf(params)
             ) { members, searchParams ->
                 _isLoading.value = false

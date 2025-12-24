@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.famy.tree.domain.model.FamilyMember
+import com.famy.tree.domain.model.LifeEvent
+import com.famy.tree.domain.model.LifeEventKind
 import com.famy.tree.domain.repository.FamilyMemberRepository
 import com.famy.tree.domain.repository.LifeEventRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -57,9 +59,9 @@ class TimelineViewModel @Inject constructor(
 
     val uiState: StateFlow<TimelineUiState> = combine(
         memberRepository.observeMembersByTree(treeId),
-        lifeEventRepository.observeLifeEventsByTree(treeId),
+        lifeEventRepository.observeEventsByTree(treeId),
         _selectedFilter
-    ) { members, lifeEvents, filter ->
+    ) { members: List<FamilyMember>, lifeEvents: List<LifeEvent>, filter: TimelineFilter ->
         _isLoading.value = false
         val memberMap = members.associateBy { it.id }
 

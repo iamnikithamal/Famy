@@ -77,7 +77,7 @@ class SettingsViewModel @Inject constructor(
                 showClearConfirmation = false
             )
             try {
-                treeRepository.deleteAllTrees()
+                treeRepository.clearAllData()
                 _uiState.value = _uiState.value.copy(
                     isClearing = false,
                     message = "All data cleared successfully"

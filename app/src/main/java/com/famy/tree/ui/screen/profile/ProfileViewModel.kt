@@ -61,8 +61,8 @@ class ProfileViewModel @Inject constructor(
     val uiState: StateFlow<ProfileUiState> = combine(
         memberRepository.observeMember(memberId),
         getMemberRelationships.observe(memberId),
-        lifeEventRepository.observeEventsByMember(memberId),
-        mediaRepository.observeMediaByMember(memberId),
+        lifeEventRepository.observeEvents(memberId),
+        mediaRepository.observeMedia(memberId),
         _isLoading,
         _error
     ) { array ->
