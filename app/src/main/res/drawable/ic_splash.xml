@@ -41,18 +41,18 @@
         android:fillColor="#66BB6A"
         android:centerX="42"
         android:centerY="38"
-        android:radius="3"/>
+        android:radius="3dp"/>
 
     <circle
         android:fillColor="#66BB6A"
         android:centerX="66"
         android:centerY="38"
-        android:radius="3"/>
+        android:radius="3dp"/>
 
     <circle
         android:fillColor="#81C784"
         android:centerX="54"
         android:centerY="28"
-        android:radius="4"/>
+        android:radius="4dp"/>
 
 </vector>

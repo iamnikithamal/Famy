@@ -48,7 +48,7 @@ Success criteria: Fully functional, production-grade app that builds, runs, and 
 - AndroidManifest configuration
 - Theme setup (Color, Type, Theme)
 - Common components and dialogs (partial)
-- Splash icon drawable
+- Splash icon drawable (fixed radius attribute errors - added dp units)
 
 ### Now
 - Creating MainActivity
