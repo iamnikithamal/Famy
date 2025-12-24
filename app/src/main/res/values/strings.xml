@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Famy</string>
+    <string name="app_tagline">Your Family Story, Beautifully Preserved</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_tree">Tree</string>
+    <string name="nav_members">Members</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_settings">Settings</string>
+    <string name="nav_statistics">Statistics</string>
+    <string name="nav_timeline">Timeline</string>
+    <string name="nav_gallery">Gallery</string>
+    <string name="nav_import_export">Import/Export</string>
+    <string name="nav_help">Help</string>
+
+    <!-- Home Screen -->
+    <string name="home_welcome">Welcome to Famy</string>
+    <string name="home_empty_title">Start Your Family Journey</string>
+    <string name="home_empty_subtitle">Create your first family tree and begin documenting your heritage</string>
+    <string name="home_create_tree">Create Family Tree</string>
+    <string name="home_quick_add">Quick Add Member</string>
+    <string name="home_total_members">Total Members</string>
+    <string name="home_generations">Generations</string>
+    <string name="home_recent">Recent Additions</string>
+    <string name="home_trees">Family Trees</string>
+
+    <!-- Tree View -->
+    <string name="tree_empty">No members in this tree yet</string>
+    <string name="tree_add_root">Add First Member</string>
+    <string name="tree_layout_vertical">Vertical</string>
+    <string name="tree_layout_horizontal">Horizontal</string>
+    <string name="tree_layout_fan">Fan Chart</string>
+    <string name="tree_layout_pedigree">Pedigree</string>
+    <string name="tree_zoom_in">Zoom In</string>
+    <string name="tree_zoom_out">Zoom Out</string>
+    <string name="tree_center">Center View</string>
+
+    <!-- Member Profile -->
+    <string name="profile_add_photo">Add Photo</string>
+    <string name="profile_change_photo">Change Photo</string>
+    <string name="profile_first_name">First Name</string>
+    <string name="profile_last_name">Last Name</string>
+    <string name="profile_maiden_name">Maiden Name</string>
+    <string name="profile_nickname">Nickname</string>
+    <string name="profile_gender">Gender</string>
+    <string name="profile_birth_date">Birth Date</string>
+    <string name="profile_birth_place">Birth Place</string>
+    <string name="profile_death_date">Death Date</string>
+    <string name="profile_death_place">Death Place</string>
+    <string name="profile_is_living">Living</string>
+    <string name="profile_biography">Biography</string>
+    <string name="profile_occupation">Occupation</string>
+    <string name="profile_education">Education</string>
+    <string name="profile_religion">Religion</string>
+    <string name="profile_nationality">Nationality</string>
+    <string name="profile_notes">Notes</string>
+    <string name="profile_relationships">Relationships</string>
+    <string name="profile_timeline">Life Events</string>
+    <string name="profile_media">Photos &amp; Documents</string>
+    <string name="profile_custom_fields">Custom Fields</string>
+
+    <!-- Relationships -->
+    <string name="relationship_father">Father</string>
+    <string name="relationship_mother">Mother</string>
+    <string name="relationship_spouse">Spouse</string>
+    <string name="relationship_child">Child</string>
+    <string name="relationship_sibling">Sibling</string>
+    <string name="relationship_add_parent">Add Parent</string>
+    <string name="relationship_add_spouse">Add Spouse</string>
+    <string name="relationship_add_child">Add Child</string>
+    <string name="relationship_add_sibling">Add Sibling</string>
+    <string name="relationship_select_existing">Select Existing Member</string>
+    <string name="relationship_create_new">Create New Member</string>
+
+    <!-- Gender -->
+    <string name="gender_male">Male</string>
+    <string name="gender_female">Female</string>
+    <string name="gender_other">Other</string>
+    <string name="gender_unknown">Unknown</string>
+
+    <!-- Search -->
+    <string name="search_hint">Search family members…</string>
+    <string name="search_no_results">No members found</string>
+    <string name="search_filter">Filter</string>
+    <string name="filter_generation">Generation</string>
+    <string name="filter_branch">Branch</string>
+    <string name="filter_living">Living Only</string>
+    <string name="filter_deceased">Deceased Only</string>
+    <string name="filter_date_range">Date Range</string>
+    <string name="filter_clear">Clear Filters</string>
+    <string name="filter_apply">Apply</string>
+
+    <!-- Timeline -->
+    <string name="timeline_births">Births</string>
+    <string name="timeline_deaths">Deaths</string>
+    <string name="timeline_marriages">Marriages</string>
+    <string name="timeline_all_events">All Events</string>
+
+    <!-- Statistics -->
+    <string name="stats_overview">Overview</string>
+    <string name="stats_total_members">Total Members</string>
+    <string name="stats_living">Living</string>
+    <string name="stats_deceased">Deceased</string>
+    <string name="stats_male">Male</string>
+    <string name="stats_female">Female</string>
+    <string name="stats_generations">Generations</string>
+    <string name="stats_avg_lifespan">Average Lifespan</string>
+    <string name="stats_avg_children">Average Children</string>
+    <string name="stats_common_names">Most Common Names</string>
+    <string name="stats_common_surnames">Most Common Surnames</string>
+    <string name="stats_birth_months">Births by Month</string>
+    <string name="stats_longevity">Longevity Records</string>
+
+    <!-- Settings -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_system">System Default</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_date_format">Date Format</string>
+    <string name="settings_data">Data Management</string>
+    <string name="settings_backup">Backup Data</string>
+    <string name="settings_restore">Restore Data</string>
+    <string name="settings_export_gedcom">Export GEDCOM</string>
+    <string name="settings_import_gedcom">Import GEDCOM</string>
+    <string name="settings_clear_data">Clear All Data</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_privacy">Privacy Policy</string>
+    <string name="settings_licenses">Open Source Licenses</string>
+
+    <!-- Import/Export -->
+    <string name="import_title">Import Data</string>
+    <string name="export_title">Export Data</string>
+    <string name="import_gedcom">Import GEDCOM File</string>
+    <string name="import_json">Import JSON Backup</string>
+    <string name="export_gedcom">Export as GEDCOM</string>
+    <string name="export_json">Export as JSON</string>
+    <string name="import_success">Import completed successfully</string>
+    <string name="import_error">Import failed: %s</string>
+    <string name="export_success">Export completed successfully</string>
+    <string name="export_error">Export failed: %s</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_start">Get Started</string>
+    <string name="onboarding_1_title">Welcome to Famy</string>
+    <string name="onboarding_1_desc">Your personal family tree app. Document your heritage, preserve memories, and connect with your roots.</string>
+    <string name="onboarding_2_title">Build Your Tree</string>
+    <string name="onboarding_2_desc">Add family members, define relationships, and watch your family tree grow with our intuitive interface.</string>
+    <string name="onboarding_3_title">Rich Profiles</string>
+    <string name="onboarding_3_desc">Store photos, dates, places, biographies, and custom fields for each family member.</string>
+    <string name="onboarding_4_title">Explore &amp; Discover</string>
+    <string name="onboarding_4_desc">Visualize your family tree, explore timelines, and discover insights about your family history.</string>
+    <string name="onboarding_5_title">Your Data, Your Control</string>
+    <string name="onboarding_5_desc">Everything stays on your device. Export to GEDCOM or JSON anytime. No account required.</string>
+
+    <!-- Actions -->
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_add">Add</string>
+    <string name="action_close">Close</string>
+    <string name="action_confirm">Confirm</string>
+    <string name="action_done">Done</string>
+    <string name="action_retry">Retry</string>
+    <string name="action_share">Share</string>
+
+    <!-- Dialogs -->
+    <string name="dialog_delete_member_title">Delete Member?</string>
+    <string name="dialog_delete_member_message">This will permanently delete %s and all their associated data. Relationships will be preserved.</string>
+    <string name="dialog_delete_tree_title">Delete Family Tree?</string>
+    <string name="dialog_delete_tree_message">This will permanently delete \"%s\" and all its members. This action cannot be undone.</string>
+    <string name="dialog_clear_data_title">Clear All Data?</string>
+    <string name="dialog_clear_data_message">This will permanently delete all family trees, members, and media. This action cannot be undone.</string>
+    <string name="dialog_unsaved_changes">You have unsaved changes. Discard them?</string>
+
+    <!-- Errors -->
+    <string name="error_generic">Something went wrong. Please try again.</string>
+    <string name="error_invalid_relationship">Invalid relationship. Please check your selection.</string>
+    <string name="error_duplicate_relationship">This relationship already exists.</string>
+    <string name="error_self_relationship">A person cannot be related to themselves.</string>
+    <string name="error_required_field">This field is required</string>
+    <string name="error_invalid_date">Invalid date format</string>
+    <string name="error_future_birth">Birth date cannot be in the future</string>
+    <string name="error_death_before_birth">Death date cannot be before birth date</string>
+
+    <!-- Crash Screen -->
+    <string name="crash_title">Oops! Something went wrong</string>
+    <string name="crash_message">The app encountered an unexpected error.</string>
+    <string name="crash_copy">Copy Log</string>
+    <string name="crash_restart">Restart App</string>
+    <string name="crash_copied">Crash log copied to clipboard</string>
+
+    <!-- Accessibility -->
+    <string name="cd_member_photo">Member photo</string>
+    <string name="cd_add_member">Add family member</string>
+    <string name="cd_edit_member">Edit member details</string>
+    <string name="cd_delete_member">Delete member</string>
+    <string name="cd_navigation_menu">Open navigation menu</string>
+    <string name="cd_close_menu">Close menu</string>
+    <string name="cd_zoom_in">Zoom in</string>
+    <string name="cd_zoom_out">Zoom out</string>
+    <string name="cd_back">Go back</string>
+
+    <!-- Date Formats -->
+    <string name="date_format_mdy">MM/dd/yyyy</string>
+    <string name="date_format_dmy">dd/MM/yyyy</string>
+    <string name="date_format_ymd">yyyy-MM-dd</string>
+    <string name="date_format_full">MMMM d, yyyy</string>
+
+    <!-- Misc -->
+    <string name="years_old">%d years old</string>
+    <string name="lived_years">Lived %d years</string>
+    <string name="unknown">Unknown</string>
+    <string name="not_set">Not set</string>
+    <string name="loading">Loading…</string>
+    <string name="no_data">No data available</string>
+</resources>
