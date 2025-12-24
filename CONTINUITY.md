@@ -23,7 +23,7 @@ Success criteria: Fully functional, production-grade app that builds, runs, and 
 - Modular code: 500-1000 lines per file max
 - No TODOs or placeholder implementations
 - Public keystore for open-source signing
-- Min SDK ~24, Target SDK 34
+- Min SDK 24, Target SDK 35
 
 ## Key Decisions
 - Architecture: MVVM + Repository pattern + Clean Architecture layers
@@ -36,25 +36,61 @@ Success criteria: Fully functional, production-grade app that builds, runs, and 
 
 ## State
 
-### Done
-- (Starting fresh)
+### Done (Previous Session - ~30-35% complete)
+- Project structure and Gradle configuration
+- Data layer: 5 entities, 5 DAOs, database, converters
+- Repository implementations (5 complete)
+- Domain models (7), use cases (tree, member, statistics)
+- UI: HomeScreen/ViewModel, TreeScreen/ViewModel (partial)
+- Navigation routes and NavGraph structure
+- CrashHandler + CrashActivity
+- FamyApplication with Hilt + Coil
+- AndroidManifest configuration
+- Theme setup (Color, Type, Theme)
+- Common components and dialogs (partial)
+- Splash icon drawable
 
 ### Now
-- Creating project structure and Gradle configuration
+- Creating MainActivity
+- Implementing TreeCanvas (high-performance Canvas-based visualization)
+- Completing all missing screens
 
-### Next
-- Implement data layer (entities, DAOs, database)
-- Implement domain layer (models, repositories, use cases)
-- Implement UI layer (screens, components, navigation)
-- Add crash handler and debug activity
-- Create onboarding flow
-- Generate app icon assets
-- Set up GitHub Actions workflow
-- Create keystore
+### Next (Priority Order)
+1. MainActivity - app entry point
+2. TreeCanvas - Canvas-based tree rendering with viewport culling
+3. OnboardingScreen - first-time user flow
+4. MembersScreen + MembersViewModel - member list
+5. ProfileScreen + ProfileViewModel - member details
+6. EditMemberScreen + EditMemberViewModel - create/edit members
+7. AddRelationshipScreen - relationship editor
+8. SearchScreen + SearchViewModel - search & filter
+9. TimelineScreen + TimelineViewModel - chronological events
+10. StatisticsScreen + StatisticsViewModel - family analytics
+11. GalleryScreen + GalleryViewModel - media gallery
+12. SettingsScreen + SettingsViewModel - app settings
+13. Import/Export functionality
+14. App icon generation (mipmap assets)
+15. Keystore creation
+16. GitHub Actions workflow
 
 ## Open Questions
 - None currently
 
 ## Working Set
-- Root: /workspace/repo-fed96474-be42-468c-8a67-3b080ff111b7
+- Root: /workspace/repo-7a8c9db4-b146-4581-b426-cecb94a648e8
 - Main package: app/src/main/java/com/famy/tree/
+- Key files to create:
+  - ui/activity/MainActivity.kt
+  - ui/component/TreeCanvas.kt
+  - ui/screen/onboarding/OnboardingScreen.kt
+  - ui/screen/members/MembersScreen.kt + MembersViewModel.kt
+  - ui/screen/profile/ProfileScreen.kt + ProfileViewModel.kt
+  - ui/screen/editor/EditMemberScreen.kt + EditMemberViewModel.kt
+  - ui/screen/relationship/AddRelationshipScreen.kt + AddRelationshipViewModel.kt
+  - ui/screen/search/SearchScreen.kt + SearchViewModel.kt
+  - ui/screen/timeline/TimelineScreen.kt + TimelineViewModel.kt
+  - ui/screen/statistics/StatisticsScreen.kt + StatisticsViewModel.kt
+  - ui/screen/gallery/GalleryScreen.kt + GalleryViewModel.kt
+  - ui/screen/settings/SettingsScreen.kt + SettingsViewModel.kt
+  - .github/workflows/android.yml
+  - keystore/famy-release.jks
