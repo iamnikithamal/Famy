@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Splash Screen -->
+    <color name="splash_background">#FAFAFA</color>
+    <color name="splash_icon">#1B5E20</color>
+
+    <!-- Crash Screen -->
+    <color name="crash_background">#FAFAFA</color>
+    <color name="crash_status_bar">#F5F5F5</color>
+    <color name="crash_text">#212121</color>
+    <color name="crash_text_secondary">#757575</color>
+    <color name="crash_button">#1B5E20</color>
+    <color name="crash_button_text">#FFFFFF</color>
+    <color name="crash_log_background">#F5F5F5</color>
+    <color name="crash_log_text">#424242</color>
+</resources>
