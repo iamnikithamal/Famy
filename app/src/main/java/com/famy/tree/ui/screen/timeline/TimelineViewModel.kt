@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.famy.tree.domain.model.FamilyMember
+import com.famy.tree.domain.model.LifeEvent
+import com.famy.tree.domain.model.LifeEventKind
 import com.famy.tree.domain.repository.FamilyMemberRepository
 import com.famy.tree.domain.repository.LifeEventRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -57,9 +59,9 @@ class TimelineViewModel @Inject constructor(
 
     val uiState: StateFlow<TimelineUiState> = combine(
         memberRepository.observeMembersByTree(treeId),
-        lifeEventRepository.observeLifeEventsByTree(treeId),
+        lifeEventRepository.observeEventsByTree(treeId),
         _selectedFilter
-    ) { members, lifeEvents, filter ->
+    ) { members: List<FamilyMember>, lifeEvents: List<LifeEvent>, filter: TimelineFilter ->
         _isLoading.value = false
         val memberMap = members.associateBy { it.id }
 
@@ -103,9 +105,8 @@ class TimelineViewModel @Inject constructor(
             lifeEvents.forEach { event ->
                 val member = memberMap[event.memberId]
                 if (member != null && event.eventDate != null) {
-                    val eventType = when {
-                        event.type.contains("marriage", ignoreCase = true) ||
-                                event.type.contains("wedding", ignoreCase = true) -> TimelineEventType.MARRIAGE
+                    val eventType = when (event.type) {
+                        LifeEventKind.MARRIAGE -> TimelineEventType.MARRIAGE
                         else -> TimelineEventType.CUSTOM
                     }
                     add(
@@ -118,7 +119,7 @@ class TimelineViewModel @Inject constructor(
                             title = event.title,
                             description = event.description,
                             date = event.eventDate,
-                            place = event.location
+                            place = event.eventPlace
                         )
                     )
                 }

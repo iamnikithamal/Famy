@@ -49,11 +49,12 @@ Success criteria: Fully functional, production-grade app that builds, runs, and 
 - Theme setup (Color, Type, Theme)
 - Common components and dialogs (partial)
 - Splash icon drawable (fixed radius attribute errors - added dp units)
+- Fixed TimelineViewModel compilation errors:
+  - Changed `event.type.contains()` to proper enum comparison `when (event.type) { LifeEventKind.MARRIAGE -> ... }`
+  - Changed `event.location` to `event.eventPlace` (correct property name from LifeEvent model)
 
 ### Now
-- Creating MainActivity
-- Implementing TreeCanvas (high-performance Canvas-based visualization)
-- Completing all missing screens
+- Completed TimelineViewModel fixes
 
 ### Next (Priority Order)
 1. MainActivity - app entry point
