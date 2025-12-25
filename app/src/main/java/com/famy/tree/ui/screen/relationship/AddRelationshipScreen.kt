@@ -25,7 +25,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Female
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Male
-import androidx.compose.material.icons.filled.Notes
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Button
@@ -318,7 +318,7 @@ private fun RelationshipDetailsSection(
                 onValueChange = onNotesChange,
                 label = { Text("Notes") },
                 leadingIcon = {
-                    Icon(Icons.Default.Notes, contentDescription = null)
+                    Icon(Icons.AutoMirrored.Filled.Notes, contentDescription = null)
                 },
                 minLines = 2,
                 maxLines = 4,

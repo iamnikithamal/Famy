@@ -4,8 +4,10 @@ import com.famy.tree.data.local.dao.FamilyMemberDao
 import com.famy.tree.data.local.dao.FamilyTreeDao
 import com.famy.tree.data.local.dao.RelationshipDao
 import com.famy.tree.data.local.entity.FamilyMemberEntity
+import com.famy.tree.domain.model.CareerStatus
 import com.famy.tree.domain.model.FamilyMember
 import com.famy.tree.domain.model.Gender
+import com.famy.tree.domain.model.RelationshipStatus
 import com.famy.tree.domain.repository.FamilyMemberRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -168,6 +170,7 @@ class FamilyMemberRepositoryImpl @Inject constructor(
         id = id,
         treeId = treeId,
         firstName = firstName,
+        middleName = middleName,
         lastName = lastName,
         maidenName = maidenName,
         nickname = nickname,
@@ -175,12 +178,19 @@ class FamilyMemberRepositoryImpl @Inject constructor(
         photoPath = photoPath,
         birthDate = birthDate,
         birthPlace = birthPlace,
+        birthPlaceLatitude = birthPlaceLatitude,
+        birthPlaceLongitude = birthPlaceLongitude,
         deathDate = deathDate,
         deathPlace = deathPlace,
+        deathPlaceLatitude = deathPlaceLatitude,
+        deathPlaceLongitude = deathPlaceLongitude,
         isLiving = isLiving,
         biography = biography,
         occupation = occupation,
         education = education,
+        interests = parseInterests(interests),
+        careerStatus = CareerStatus.fromString(careerStatus),
+        relationshipStatus = RelationshipStatus.fromString(relationshipStatus),
         religion = religion,
         nationality = nationality,
         notes = notes,
@@ -195,6 +205,7 @@ class FamilyMemberRepositoryImpl @Inject constructor(
         id = id,
         treeId = treeId,
         firstName = firstName,
+        middleName = middleName,
         lastName = lastName,
         maidenName = maidenName,
         nickname = nickname,
@@ -202,12 +213,19 @@ class FamilyMemberRepositoryImpl @Inject constructor(
         photoPath = photoPath,
         birthDate = birthDate,
         birthPlace = birthPlace,
+        birthPlaceLatitude = birthPlaceLatitude,
+        birthPlaceLongitude = birthPlaceLongitude,
         deathDate = deathDate,
         deathPlace = deathPlace,
+        deathPlaceLatitude = deathPlaceLatitude,
+        deathPlaceLongitude = deathPlaceLongitude,
         isLiving = isLiving,
         biography = biography,
         occupation = occupation,
         education = education,
+        interests = serializeInterests(interests),
+        careerStatus = careerStatus.name,
+        relationshipStatus = relationshipStatus.name,
         religion = religion,
         nationality = nationality,
         notes = notes,
@@ -232,6 +250,23 @@ class FamilyMemberRepositoryImpl @Inject constructor(
         return kotlinx.serialization.json.Json.encodeToString(
             kotlinx.serialization.serializer(),
             fields
+        )
+    }
+
+    private fun parseInterests(json: String?): List<String> {
+        if (json.isNullOrBlank()) return emptyList()
+        return try {
+            kotlinx.serialization.json.Json.decodeFromString(json)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun serializeInterests(interests: List<String>): String? {
+        if (interests.isEmpty()) return null
+        return kotlinx.serialization.json.Json.encodeToString(
+            kotlinx.serialization.serializer(),
+            interests
         )
     }
 }

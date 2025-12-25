@@ -1,6 +1,11 @@
 package com.famy.tree.ui.screen.tree.component
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.BitmapShader
+import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Shader
 import android.graphics.Typeface
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -9,8 +14,11 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,6 +53,12 @@ import com.famy.tree.ui.theme.PaternalLineColor
 import com.famy.tree.ui.theme.SpouseLineColor
 import com.famy.tree.ui.theme.UnknownCardColor
 import com.famy.tree.ui.theme.UnknownCardColorDark
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+
+private const val PHOTO_CACHE_SIZE = 50
+private const val AVATAR_SIZE = 48
 
 @Composable
 fun TreeCanvas(
@@ -73,6 +87,35 @@ fun TreeCanvas(
     var localOffsetX by remember { mutableFloatStateOf(offsetX) }
     var localOffsetY by remember { mutableFloatStateOf(offsetY) }
     var canvasSize by remember { mutableStateOf(Size.Zero) }
+
+    val photoCache = remember { mutableStateMapOf<String, Bitmap?>() }
+
+    LaunchedEffect(nodes) {
+        nodes.forEach { node ->
+            node.member.photoPath?.let { path ->
+                if (!photoCache.containsKey(path)) {
+                    withContext(Dispatchers.IO) {
+                        val bitmap = loadAndScaleBitmap(path, AVATAR_SIZE)
+                        photoCache[path] = bitmap
+                    }
+                }
+            }
+        }
+        if (photoCache.size > PHOTO_CACHE_SIZE) {
+            val keysToRemove = photoCache.keys.take(photoCache.size - PHOTO_CACHE_SIZE)
+            keysToRemove.forEach { key ->
+                photoCache[key]?.recycle()
+                photoCache.remove(key)
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            photoCache.values.filterNotNull().forEach { it.recycle() }
+            photoCache.clear()
+        }
+    }
 
     val nodeWidth = config.nodeWidth
     val nodeHeight = config.nodeHeight
@@ -209,7 +252,8 @@ fun TreeCanvas(
                     outlineColor = outlineColor,
                     selectedColor = primaryColor,
                     centerOffsetX = centerOffsetX,
-                    centerOffsetY = centerOffsetY
+                    centerOffsetY = centerOffsetY,
+                    photoBitmap = node.member.photoPath?.let { photoCache[it] }
                 )
             }
 
@@ -338,7 +382,8 @@ private fun DrawScope.drawMemberNode(
     outlineColor: Color,
     selectedColor: Color,
     centerOffsetX: Float,
-    centerOffsetY: Float
+    centerOffsetY: Float,
+    photoBitmap: Bitmap? = null
 ) {
     val member = node.member
     val x = node.x + centerOffsetX
@@ -373,11 +418,49 @@ private fun DrawScope.drawMemberNode(
     val avatarCenterX = x + nodeWidth / 2
     val avatarCenterY = y + 35f
 
-    drawCircle(
-        color = outlineColor.copy(alpha = 0.3f),
-        radius = avatarRadius,
-        center = Offset(avatarCenterX, avatarCenterY)
-    )
+    if (photoBitmap != null && !photoBitmap.isRecycled) {
+        val photoPaint = Paint().apply {
+            isAntiAlias = true
+            shader = BitmapShader(photoBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP).apply {
+                val scale = (avatarRadius * 2) / photoBitmap.width.toFloat()
+                val matrix = Matrix()
+                matrix.setScale(scale, scale)
+                matrix.postTranslate(avatarCenterX - avatarRadius, avatarCenterY - avatarRadius)
+                setLocalMatrix(matrix)
+            }
+        }
+        drawContext.canvas.nativeCanvas.drawCircle(
+            avatarCenterX,
+            avatarCenterY,
+            avatarRadius,
+            photoPaint
+        )
+        drawCircle(
+            color = outlineColor.copy(alpha = 0.5f),
+            radius = avatarRadius,
+            center = Offset(avatarCenterX, avatarCenterY),
+            style = Stroke(width = 2f)
+        )
+    } else {
+        drawCircle(
+            color = outlineColor.copy(alpha = 0.3f),
+            radius = avatarRadius,
+            center = Offset(avatarCenterX, avatarCenterY)
+        )
+        val initialPaint = Paint().apply {
+            color = outlineColor.copy(alpha = 0.7f).toArgb()
+            textSize = 28f
+            typeface = Typeface.DEFAULT_BOLD
+            isAntiAlias = true
+            textAlign = Paint.Align.CENTER
+        }
+        drawContext.canvas.nativeCanvas.drawText(
+            member.firstName.take(1).uppercase(),
+            avatarCenterX,
+            avatarCenterY + 10f,
+            initialPaint
+        )
+    }
 
     val genderIndicatorColor = when (member.gender) {
         Gender.MALE -> Color(0xFF2196F3)
@@ -391,6 +474,21 @@ private fun DrawScope.drawMemberNode(
         radius = 5f,
         center = Offset(x + nodeWidth - 12f, y + 12f)
     )
+
+    if (!member.isLiving) {
+        drawLine(
+            color = outlineColor.copy(alpha = 0.5f),
+            start = Offset(x + 8f, y + 8f),
+            end = Offset(x + 20f, y + 20f),
+            strokeWidth = 2f
+        )
+        drawLine(
+            color = outlineColor.copy(alpha = 0.5f),
+            start = Offset(x + 20f, y + 8f),
+            end = Offset(x + 8f, y + 20f),
+            strokeWidth = 2f
+        )
+    }
 
     drawContext.canvas.nativeCanvas.drawText(
         member.firstName.take(12),
@@ -433,4 +531,43 @@ private fun Color.luminance(): Float {
     val g = green
     val b = blue
     return 0.299f * r + 0.587f * g + 0.114f * b
+}
+
+private fun loadAndScaleBitmap(path: String, targetSize: Int): Bitmap? {
+    return try {
+        val file = File(path)
+        if (!file.exists()) return null
+
+        val options = BitmapFactory.Options().apply {
+            inJustDecodeBounds = true
+        }
+        BitmapFactory.decodeFile(path, options)
+
+        val sampleSize = calculateInSampleSize(options.outWidth, options.outHeight, targetSize)
+
+        options.inJustDecodeBounds = false
+        options.inSampleSize = sampleSize
+
+        val bitmap = BitmapFactory.decodeFile(path, options) ?: return null
+
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, targetSize, targetSize, true)
+        if (scaledBitmap !== bitmap) {
+            bitmap.recycle()
+        }
+        scaledBitmap
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun calculateInSampleSize(width: Int, height: Int, targetSize: Int): Int {
+    var inSampleSize = 1
+    if (width > targetSize || height > targetSize) {
+        val halfWidth = width / 2
+        val halfHeight = height / 2
+        while ((halfWidth / inSampleSize) >= targetSize && (halfHeight / inSampleSize) >= targetSize) {
+            inSampleSize *= 2
+        }
+    }
+    return inSampleSize
 }

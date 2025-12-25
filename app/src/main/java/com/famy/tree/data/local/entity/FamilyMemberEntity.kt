@@ -40,6 +40,9 @@ data class FamilyMemberEntity(
     @ColumnInfo(name = "first_name")
     val firstName: String,
 
+    @ColumnInfo(name = "middle_name")
+    val middleName: String? = null,
+
     @ColumnInfo(name = "last_name")
     val lastName: String? = null,
 
@@ -61,11 +64,23 @@ data class FamilyMemberEntity(
     @ColumnInfo(name = "birth_place")
     val birthPlace: String? = null,
 
+    @ColumnInfo(name = "birth_place_latitude")
+    val birthPlaceLatitude: Double? = null,
+
+    @ColumnInfo(name = "birth_place_longitude")
+    val birthPlaceLongitude: Double? = null,
+
     @ColumnInfo(name = "death_date")
     val deathDate: Long? = null,
 
     @ColumnInfo(name = "death_place")
     val deathPlace: String? = null,
+
+    @ColumnInfo(name = "death_place_latitude")
+    val deathPlaceLatitude: Double? = null,
+
+    @ColumnInfo(name = "death_place_longitude")
+    val deathPlaceLongitude: Double? = null,
 
     @ColumnInfo(name = "is_living")
     val isLiving: Boolean = true,
@@ -78,6 +93,15 @@ data class FamilyMemberEntity(
 
     @ColumnInfo(name = "education")
     val education: String? = null,
+
+    @ColumnInfo(name = "interests")
+    val interests: String? = null,
+
+    @ColumnInfo(name = "career_status")
+    val careerStatus: String = "UNKNOWN",
+
+    @ColumnInfo(name = "relationship_status")
+    val relationshipStatus: String = "UNKNOWN",
 
     @ColumnInfo(name = "religion")
     val religion: String? = null,

@@ -5,12 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.famy.tree.domain.model.FamilyMember
 import com.famy.tree.domain.model.Gender
+import com.famy.tree.domain.model.Relationship
+import com.famy.tree.domain.model.RelationshipKind
 import com.famy.tree.domain.repository.FamilyMemberRepository
 import com.famy.tree.domain.repository.RelationshipRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import java.util.Calendar
 import javax.inject.Inject
@@ -56,113 +61,144 @@ class StatisticsViewModel @Inject constructor(
         memberRepository.observeMembersByTree(treeId),
         relationshipRepository.observeRelationshipsByTree(treeId)
     ) { members, relationships ->
+        computeStatistics(members, relationships)
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = StatisticsUiState()
+        )
+
+    private fun computeStatistics(
+        members: List<FamilyMember>,
+        relationships: List<Relationship>
+    ): StatisticsUiState {
         if (members.isEmpty()) {
-            return@combine StatisticsUiState(isLoading = false)
+            return StatisticsUiState(isLoading = false)
         }
 
-        val livingMembers = members.filter { it.isLiving }
-        val deceasedMembers = members.filter { !it.isLiving }
+        // Single-pass categorization for living/deceased and gender counts
+        var livingCount = 0
+        var deceasedCount = 0
+        var maleCount = 0
+        var femaleCount = 0
+        var otherCount = 0
+        var unknownCount = 0
+        var maxGeneration = 0
 
-        val genderCounts = members.groupBy { it.gender }
-        val maleCount = genderCounts[Gender.MALE]?.size ?: 0
-        val femaleCount = genderCounts[Gender.FEMALE]?.size ?: 0
-        val otherCount = genderCounts[Gender.OTHER]?.size ?: 0
-        val unknownCount = genderCounts[Gender.UNKNOWN]?.size ?: 0
+        val deceasedWithLifespan = mutableListOf<FamilyMember>()
+        val livingWithBirthDate = mutableListOf<FamilyMember>()
+        val membersWithBirthDate = mutableListOf<FamilyMember>()
 
-        val generations = members.maxOfOrNull { it.generation }?.let { it + 1 } ?: 0
+        // Name frequency maps - use single pass
+        val firstNameCounts = mutableMapOf<String, Int>()
+        val lastNameCounts = mutableMapOf<String, Int>()
 
-        val lifespans = deceasedMembers.mapNotNull { it.lifespan?.toDouble() }
-        val averageLifespan = if (lifespans.isNotEmpty()) {
-            lifespans.average()
-        } else null
-
-        val oldestLiving = livingMembers
-            .filter { it.birthDate != null }
-            .minByOrNull { it.birthDate!! }
-
-        val youngestMember = members
-            .filter { it.birthDate != null }
-            .maxByOrNull { it.birthDate!! }
-
-        val longestLived = deceasedMembers
-            .filter { it.lifespan != null }
-            .maxByOrNull { it.lifespan!! }
-
-        val firstNameCounts = members
-            .groupBy { it.firstName.lowercase() }
-            .mapValues { it.value.size }
-            .entries
-            .sortedByDescending { it.value }
-            .take(10)
-            .map { NameCount(it.key.replaceFirstChar { c -> c.uppercase() }, it.value) }
-
-        val lastNameCounts = members
-            .mapNotNull { it.lastName }
-            .groupBy { it.lowercase() }
-            .mapValues { it.value.size }
-            .entries
-            .sortedByDescending { it.value }
-            .take(10)
-            .map { NameCount(it.key.replaceFirstChar { c -> c.uppercase() }, it.value) }
+        // Birth date aggregations
+        val birthMonthCounts = mutableMapOf<Int, Int>()
+        val birthDecadeCounts = mutableMapOf<Int, Int>()
+        val generationCounts = mutableMapOf<Int, Int>()
 
         val calendar = Calendar.getInstance()
-        val birthsByMonth = members
-            .mapNotNull { it.birthDate }
-            .map { date ->
-                calendar.timeInMillis = date
-                calendar.get(Calendar.MONTH)
+
+        // Single pass through all members
+        for (member in members) {
+            // Living/deceased
+            if (member.isLiving) {
+                livingCount++
+                if (member.birthDate != null) {
+                    livingWithBirthDate.add(member)
+                }
+            } else {
+                deceasedCount++
+                if (member.lifespan != null) {
+                    deceasedWithLifespan.add(member)
+                }
             }
-            .groupBy { it }
-            .mapValues { it.value.size }
 
-        val birthsByDecade = members
-            .mapNotNull { it.birthDate }
-            .map { date ->
-                calendar.timeInMillis = date
-                (calendar.get(Calendar.YEAR) / 10) * 10
+            // Gender counts
+            when (member.gender) {
+                Gender.MALE -> maleCount++
+                Gender.FEMALE -> femaleCount++
+                Gender.OTHER -> otherCount++
+                Gender.UNKNOWN -> unknownCount++
             }
-            .groupBy { it }
-            .mapValues { it.value.size }
-            .toSortedMap()
 
-        val generationBreakdown = members
-            .groupBy { it.generation }
-            .mapValues { it.value.size }
-            .toSortedMap()
+            // Generation tracking
+            if (member.generation > maxGeneration) {
+                maxGeneration = member.generation
+            }
+            generationCounts[member.generation] = (generationCounts[member.generation] ?: 0) + 1
 
-        val childRelationships = relationships.filter {
-            it.type == com.famy.tree.domain.model.RelationshipKind.CHILD
+            // Birth date tracking
+            member.birthDate?.let { birthDate ->
+                membersWithBirthDate.add(member)
+                calendar.timeInMillis = birthDate
+                val month = calendar.get(Calendar.MONTH)
+                val decade = (calendar.get(Calendar.YEAR) / 10) * 10
+                birthMonthCounts[month] = (birthMonthCounts[month] ?: 0) + 1
+                birthDecadeCounts[decade] = (birthDecadeCounts[decade] ?: 0) + 1
+            }
+
+            // Name frequency - lowercase once
+            val firstNameLower = member.firstName.lowercase()
+            firstNameCounts[firstNameLower] = (firstNameCounts[firstNameLower] ?: 0) + 1
+
+            member.lastName?.let { lastName ->
+                val lastNameLower = lastName.lowercase()
+                lastNameCounts[lastNameLower] = (lastNameCounts[lastNameLower] ?: 0) + 1
+            }
         }
-        val parentsWithChildren = childRelationships.map { it.memberId }.distinct()
+
+        // Compute derived statistics
+        val averageLifespan = if (deceasedWithLifespan.isNotEmpty()) {
+            deceasedWithLifespan.sumOf { it.lifespan!!.toDouble() } / deceasedWithLifespan.size
+        } else null
+
+        val oldestLiving = livingWithBirthDate.minByOrNull { it.birthDate!! }
+        val youngestMember = membersWithBirthDate.maxByOrNull { it.birthDate!! }
+        val longestLived = deceasedWithLifespan.maxByOrNull { it.lifespan!! }
+
+        // Top 10 names - sort only the entries we need
+        val topFirstNames = firstNameCounts.entries
+            .sortedByDescending { it.value }
+            .take(10)
+            .map { NameCount(it.key.replaceFirstChar { c -> c.uppercase() }, it.value) }
+
+        val topLastNames = lastNameCounts.entries
+            .sortedByDescending { it.value }
+            .take(10)
+            .map { NameCount(it.key.replaceFirstChar { c -> c.uppercase() }, it.value) }
+
+        // Child relationship statistics
+        val childRelationships = relationships.filter { it.type == RelationshipKind.CHILD }
+        val parentsWithChildren = childRelationships.map { it.memberId }.toSet()
         val averageChildren = if (parentsWithChildren.isNotEmpty()) {
             childRelationships.size.toDouble() / parentsWithChildren.size
         } else null
 
-        StatisticsUiState(
+        return StatisticsUiState(
             totalMembers = members.size,
-            livingMembers = livingMembers.size,
-            deceasedMembers = deceasedMembers.size,
+            livingMembers = livingCount,
+            deceasedMembers = deceasedCount,
             maleCount = maleCount,
             femaleCount = femaleCount,
             otherCount = otherCount,
             unknownGenderCount = unknownCount,
-            generations = generations,
+            generations = maxGeneration + 1,
             averageLifespan = averageLifespan,
             oldestLiving = oldestLiving,
             youngestMember = youngestMember,
             longestLived = longestLived,
-            mostCommonFirstNames = firstNameCounts,
-            mostCommonLastNames = lastNameCounts,
-            birthsByMonth = birthsByMonth,
-            birthsByDecade = birthsByDecade,
-            generationBreakdown = generationBreakdown,
+            mostCommonFirstNames = topFirstNames,
+            mostCommonLastNames = topLastNames,
+            birthsByMonth = birthMonthCounts,
+            birthsByDecade = birthDecadeCounts.toSortedMap(),
+            generationBreakdown = generationCounts.toSortedMap(),
             averageChildrenPerPerson = averageChildren,
             totalRelationships = relationships.size,
             isLoading = false
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = StatisticsUiState()
-    )
+    }
 }

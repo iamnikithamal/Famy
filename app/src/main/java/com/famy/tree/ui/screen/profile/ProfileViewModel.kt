@@ -58,6 +58,7 @@ class ProfileViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(true)
     private val _error = MutableStateFlow<String?>(null)
 
+    @Suppress("UNCHECKED_CAST")
     val uiState: StateFlow<ProfileUiState> = combine(
         memberRepository.observeMember(memberId),
         getMemberRelationships.observe(memberId),

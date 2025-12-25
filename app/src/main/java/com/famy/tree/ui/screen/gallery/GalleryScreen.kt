@@ -40,12 +40,12 @@ import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.VideoFile
-import androidx.compose.material.icons.filled.ViewList
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.automirrored.filled.ViewList
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -154,7 +154,7 @@ fun GalleryScreen(
                     }) {
                         Icon(
                             imageVector = if (uiState.viewMode == GalleryViewMode.GRID)
-                                Icons.Default.ViewList else Icons.Default.GridView,
+                                Icons.AutoMirrored.Filled.ViewList else Icons.Default.GridView,
                             contentDescription = "Toggle view mode"
                         )
                     }
@@ -336,26 +336,45 @@ fun GalleryScreen(
     }
 
     if (showDeleteDialog && uiState.selectedMedia != null) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Delete Media") },
-            text = { Text("Are you sure you want to delete this item? This action cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        viewModel.deleteMedia(uiState.selectedMedia!!.id)
-                        showDeleteDialog = false
-                    }
+        BasicAlertDialog(
+            onDismissRequest = { showDeleteDialog = false }
+        ) {
+            Card(
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp)
                 ) {
-                    Text("Delete", color = MaterialTheme.colorScheme.error)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
+                    Text(
+                        text = "Delete Media",
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Are you sure you want to delete this item? This action cannot be undone.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = { showDeleteDialog = false }) {
+                            Text("Cancel")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(
+                            onClick = {
+                                viewModel.deleteMedia(uiState.selectedMedia!!.id)
+                                showDeleteDialog = false
+                            }
+                        ) {
+                            Text("Delete", color = MaterialTheme.colorScheme.error)
+                        }
+                    }
                 }
             }
-        )
+        }
     }
 
     if (showAddMediaSheet) {
@@ -572,50 +591,67 @@ private fun MemberPickerDialog(
     onMemberSelected: (Long?) -> Unit,
     onDismiss: () -> Unit
 ) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Select Member") },
-        text = {
-            LazyColumn {
-                item {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onMemberSelected(null) }
-                            .padding(vertical = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Clear, contentDescription = null)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text("All Members")
+    BasicAlertDialog(
+        onDismissRequest = onDismiss
+    ) {
+        Card(
+            shape = RoundedCornerShape(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    text = "Select Member",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                LazyColumn(
+                    modifier = Modifier.height(300.dp)
+                ) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onMemberSelected(null) }
+                                .padding(vertical = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Clear, contentDescription = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text("All Members")
+                        }
+                    }
+                    items(members) { member ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onMemberSelected(member.id) }
+                                .padding(vertical = 12.dp)
+                                .background(
+                                    if (selectedMemberId == member.id)
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    else MaterialTheme.colorScheme.surface
+                                ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(Icons.Default.Person, contentDescription = null)
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(member.fullName)
+                        }
                     }
                 }
-                items(members) { member ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onMemberSelected(member.id) }
-                            .padding(vertical = 12.dp)
-                            .background(
-                                if (selectedMemberId == member.id)
-                                    MaterialTheme.colorScheme.primaryContainer
-                                else MaterialTheme.colorScheme.surface
-                            ),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(Icons.Default.Person, contentDescription = null)
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(member.fullName)
+                Spacer(modifier = Modifier.height(16.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(onClick = onDismiss) {
+                        Text("Cancel")
                     }
                 }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
             }
         }
-    )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -626,7 +662,7 @@ private fun MediaViewerDialog(
     onDismiss: () -> Unit,
     onDelete: () -> Unit
 ) {
-    AlertDialog(
+    BasicAlertDialog(
         onDismissRequest = onDismiss,
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -802,6 +838,6 @@ private fun getMediaTypeIcon(type: MediaKind): ImageVector {
         MediaKind.VIDEO -> Icons.Default.VideoFile
         MediaKind.AUDIO -> Icons.Default.AudioFile
         MediaKind.DOCUMENT -> Icons.Default.Description
-        MediaKind.OTHER -> Icons.Default.InsertDriveFile
+        MediaKind.OTHER -> Icons.AutoMirrored.Filled.InsertDriveFile
     }
 }

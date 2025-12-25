@@ -16,13 +16,17 @@ import com.famy.tree.domain.repository.RelationshipRepository
 import com.famy.tree.domain.usecase.BuildTreeStructureUseCase
 import com.famy.tree.domain.usecase.CalculateTreeLayoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 data class TreeUiState(
@@ -64,29 +68,65 @@ class TreeViewModel @Inject constructor(
     private val _layoutNodes = MutableStateFlow<List<TreeNode>>(emptyList())
     private val _bounds = MutableStateFlow(TreeBounds.EMPTY)
 
-    val uiState: StateFlow<TreeUiState> = combine(
+    // Track data versions to detect actual changes
+    private var lastMemberIds: Set<Long> = emptySet()
+    private var lastMemberUpdateTimes: Map<Long, Long> = emptyMap()
+    private var lastRelationshipCount: Int = 0
+    private var lastRootMemberId: Long? = null
+    private var lastLayoutType: TreeLayoutType? = null
+
+    // Create a flow that only emits when tree structure actually changes
+    private val treeDataFlow = combine(
         treeRepository.observeTree(treeId),
         memberRepository.observeMembersByTree(treeId),
         relationshipRepository.observeRelationshipsByTree(treeId),
-        _layoutConfig,
-        _scale
-    ) { tree, members, relationships, config, scale ->
-        if (members.isNotEmpty()) {
-            rebuildTree(tree, members, relationships, config)
+        _layoutConfig
+    ) { tree, members, relationships, config ->
+        TreeData(tree, members, relationships, config)
+    }.distinctUntilChanged { old, new ->
+        // Only consider equal if structural data hasn't changed
+        val memberIds = new.members.map { it.id }.toSet()
+        val memberUpdateTimes = new.members.associate { it.id to it.updatedAt }
+
+        val sameMembers = memberIds == lastMemberIds &&
+                memberUpdateTimes == lastMemberUpdateTimes
+        val sameRelationships = new.relationships.size == lastRelationshipCount
+        val sameRoot = new.tree?.rootMemberId == lastRootMemberId
+        val sameLayout = new.config.layoutType == lastLayoutType
+
+        // Update tracking variables
+        lastMemberIds = memberIds
+        lastMemberUpdateTimes = memberUpdateTimes
+        lastRelationshipCount = new.relationships.size
+        lastRootMemberId = new.tree?.rootMemberId
+        lastLayoutType = new.config.layoutType
+
+        sameMembers && sameRelationships && sameRoot && sameLayout
+    }
+
+    val uiState: StateFlow<TreeUiState> = combine(
+        treeDataFlow,
+        _scale,
+        _offsetX,
+        _offsetY,
+        _selectedMemberId
+    ) { data, scale, offsetX, offsetY, selectedMemberId ->
+        if (data.members.isNotEmpty()) {
+            rebuildTree(data.tree, data.members, data.relationships, data.config)
         }
 
         TreeUiState(
-            tree = tree,
-            members = members,
-            relationships = relationships,
+            tree = data.tree,
+            members = data.members,
+            relationships = data.relationships,
             rootNode = _rootNode.value,
             layoutNodes = _layoutNodes.value,
             bounds = _bounds.value,
-            layoutConfig = config,
-            selectedMemberId = _selectedMemberId.value,
+            layoutConfig = data.config,
+            selectedMemberId = selectedMemberId,
             scale = scale,
-            offsetX = _offsetX.value,
-            offsetY = _offsetY.value,
+            offsetX = offsetX,
+            offsetY = offsetY,
             isLoading = false,
             error = _error.value
         )
@@ -94,6 +134,13 @@ class TreeViewModel @Inject constructor(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = TreeUiState()
+    )
+
+    private data class TreeData(
+        val tree: FamilyTree?,
+        val members: List<FamilyMember>,
+        val relationships: List<Relationship>,
+        val config: TreeLayoutConfig
     )
 
     val scale: StateFlow<Float> = _scale.asStateFlow()
@@ -108,16 +155,19 @@ class TreeViewModel @Inject constructor(
         config: TreeLayoutConfig
     ) {
         try {
-            val rootNode = buildTreeStructure(treeId, tree?.rootMemberId)
-            _rootNode.value = rootNode
+            // Move expensive tree building operations to background thread
+            withContext(Dispatchers.Default) {
+                val rootNode = buildTreeStructure(treeId, tree?.rootMemberId)
+                _rootNode.value = rootNode
 
-            if (rootNode != null) {
-                val (nodes, bounds) = calculateTreeLayout(rootNode, config)
-                _layoutNodes.value = nodes
-                _bounds.value = bounds
-            } else {
-                _layoutNodes.value = emptyList()
-                _bounds.value = TreeBounds.EMPTY
+                if (rootNode != null) {
+                    val (nodes, bounds) = calculateTreeLayout(rootNode, config)
+                    _layoutNodes.value = nodes
+                    _bounds.value = bounds
+                } else {
+                    _layoutNodes.value = emptyList()
+                    _bounds.value = TreeBounds.EMPTY
+                }
             }
         } catch (e: Exception) {
             _error.value = e.message

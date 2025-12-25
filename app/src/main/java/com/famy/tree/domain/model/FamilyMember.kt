@@ -6,6 +6,7 @@ data class FamilyMember(
     val id: Long = 0,
     val treeId: Long,
     val firstName: String,
+    val middleName: String? = null,
     val lastName: String? = null,
     val maidenName: String? = null,
     val nickname: String? = null,
@@ -13,12 +14,19 @@ data class FamilyMember(
     val photoPath: String? = null,
     val birthDate: Long? = null,
     val birthPlace: String? = null,
+    val birthPlaceLatitude: Double? = null,
+    val birthPlaceLongitude: Double? = null,
     val deathDate: Long? = null,
     val deathPlace: String? = null,
+    val deathPlaceLatitude: Double? = null,
+    val deathPlaceLongitude: Double? = null,
     val isLiving: Boolean = true,
     val biography: String? = null,
     val occupation: String? = null,
     val education: String? = null,
+    val interests: List<String> = emptyList(),
+    val careerStatus: CareerStatus = CareerStatus.UNKNOWN,
+    val relationshipStatus: RelationshipStatus = RelationshipStatus.UNKNOWN,
     val religion: String? = null,
     val nationality: String? = null,
     val notes: String? = null,
@@ -87,6 +95,43 @@ enum class Gender {
 
     companion object {
         fun fromString(value: String): Gender {
+            return entries.find { it.name.equals(value, ignoreCase = true) } ?: UNKNOWN
+        }
+    }
+}
+
+enum class CareerStatus(val displayName: String) {
+    UNKNOWN("Unknown"),
+    STUDENT("Student"),
+    EMPLOYED("Employed"),
+    SELF_EMPLOYED("Self-Employed"),
+    UNEMPLOYED("Unemployed"),
+    RETIRED("Retired"),
+    HOMEMAKER("Homemaker"),
+    MILITARY("Military"),
+    ENTREPRENEUR("Entrepreneur"),
+    FREELANCER("Freelancer");
+
+    companion object {
+        fun fromString(value: String): CareerStatus {
+            return entries.find { it.name.equals(value, ignoreCase = true) } ?: UNKNOWN
+        }
+    }
+}
+
+enum class RelationshipStatus(val displayName: String) {
+    UNKNOWN("Unknown"),
+    SINGLE("Single"),
+    IN_RELATIONSHIP("In a Relationship"),
+    ENGAGED("Engaged"),
+    MARRIED("Married"),
+    DOMESTIC_PARTNERSHIP("Domestic Partnership"),
+    SEPARATED("Separated"),
+    DIVORCED("Divorced"),
+    WIDOWED("Widowed");
+
+    companion object {
+        fun fromString(value: String): RelationshipStatus {
             return entries.find { it.name.equals(value, ignoreCase = true) } ?: UNKNOWN
         }
     }

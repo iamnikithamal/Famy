@@ -5,9 +5,14 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.famy.tree.domain.model.CareerStatus
 import com.famy.tree.domain.model.FamilyMember
 import com.famy.tree.domain.model.Gender
+import com.famy.tree.domain.model.GeocodedLocation
+import com.famy.tree.domain.model.LocationResult
+import com.famy.tree.domain.model.RelationshipStatus
 import com.famy.tree.domain.repository.FamilyMemberRepository
+import com.famy.tree.domain.service.LocationService
 import com.famy.tree.domain.repository.FamilyTreeRepository
 import com.famy.tree.domain.usecase.CreateMemberUseCase
 import com.famy.tree.domain.usecase.UpdateMemberUseCase
@@ -25,18 +30,26 @@ import javax.inject.Inject
 
 data class EditMemberFormState(
     val firstName: String = "",
+    val middleName: String = "",
     val lastName: String = "",
     val maidenName: String = "",
     val nickname: String = "",
     val gender: Gender = Gender.UNKNOWN,
     val birthDate: Long? = null,
     val birthPlace: String = "",
+    val birthPlaceLatitude: Double? = null,
+    val birthPlaceLongitude: Double? = null,
     val deathDate: Long? = null,
     val deathPlace: String = "",
+    val deathPlaceLatitude: Double? = null,
+    val deathPlaceLongitude: Double? = null,
     val isLiving: Boolean = true,
     val biography: String = "",
     val occupation: String = "",
     val education: String = "",
+    val interests: List<String> = emptyList(),
+    val careerStatus: CareerStatus = CareerStatus.UNKNOWN,
+    val relationshipStatus: RelationshipStatus = RelationshipStatus.UNKNOWN,
     val religion: String = "",
     val nationality: String = "",
     val notes: String = "",
@@ -52,7 +65,11 @@ data class EditMemberUiState(
     val isSaving: Boolean = false,
     val hasChanges: Boolean = false,
     val error: String? = null,
-    val validationErrors: Map<String, String> = emptyMap()
+    val validationErrors: Map<String, String> = emptyMap(),
+    val birthPlaceSearchResults: List<GeocodedLocation> = emptyList(),
+    val deathPlaceSearchResults: List<GeocodedLocation> = emptyList(),
+    val isSearchingBirthPlace: Boolean = false,
+    val isSearchingDeathPlace: Boolean = false
 )
 
 @HiltViewModel
@@ -61,7 +78,8 @@ class EditMemberViewModel @Inject constructor(
     private val memberRepository: FamilyMemberRepository,
     private val treeRepository: FamilyTreeRepository,
     private val createMemberUseCase: CreateMemberUseCase,
-    private val updateMemberUseCase: UpdateMemberUseCase
+    private val updateMemberUseCase: UpdateMemberUseCase,
+    private val locationService: LocationService
 ) : ViewModel() {
 
     private val treeId: Long = savedStateHandle.get<Long>("treeId") ?: 0L
@@ -83,18 +101,26 @@ class EditMemberViewModel @Inject constructor(
                         it.copy(
                             form = EditMemberFormState(
                                 firstName = member.firstName,
+                                middleName = member.middleName ?: "",
                                 lastName = member.lastName ?: "",
                                 maidenName = member.maidenName ?: "",
                                 nickname = member.nickname ?: "",
                                 gender = member.gender,
                                 birthDate = member.birthDate,
                                 birthPlace = member.birthPlace ?: "",
+                                birthPlaceLatitude = member.birthPlaceLatitude,
+                                birthPlaceLongitude = member.birthPlaceLongitude,
                                 deathDate = member.deathDate,
                                 deathPlace = member.deathPlace ?: "",
+                                deathPlaceLatitude = member.deathPlaceLatitude,
+                                deathPlaceLongitude = member.deathPlaceLongitude,
                                 isLiving = member.isLiving,
                                 biography = member.biography ?: "",
                                 occupation = member.occupation ?: "",
                                 education = member.education ?: "",
+                                interests = member.interests,
+                                careerStatus = member.careerStatus,
+                                relationshipStatus = member.relationshipStatus,
                                 religion = member.religion ?: "",
                                 nationality = member.nationality ?: "",
                                 notes = member.notes ?: "",
@@ -121,6 +147,12 @@ class EditMemberViewModel @Inject constructor(
                 hasChanges = true,
                 validationErrors = it.validationErrors - "firstName"
             )
+        }
+    }
+
+    fun updateMiddleName(value: String) {
+        _uiState.update {
+            it.copy(form = it.form.copy(middleName = value), hasChanges = true)
         }
     }
 
@@ -223,6 +255,117 @@ class EditMemberViewModel @Inject constructor(
         }
     }
 
+    fun updateInterests(interests: List<String>) {
+        _uiState.update {
+            it.copy(form = it.form.copy(interests = interests), hasChanges = true)
+        }
+    }
+
+    fun addInterest(interest: String) {
+        val trimmed = interest.trim()
+        if (trimmed.isNotBlank()) {
+            _uiState.update {
+                val newInterests = it.form.interests + trimmed
+                it.copy(form = it.form.copy(interests = newInterests.distinct()), hasChanges = true)
+            }
+        }
+    }
+
+    fun removeInterest(interest: String) {
+        _uiState.update {
+            val newInterests = it.form.interests - interest
+            it.copy(form = it.form.copy(interests = newInterests), hasChanges = true)
+        }
+    }
+
+    fun updateCareerStatus(status: CareerStatus) {
+        _uiState.update {
+            it.copy(form = it.form.copy(careerStatus = status), hasChanges = true)
+        }
+    }
+
+    fun updateRelationshipStatus(status: RelationshipStatus) {
+        _uiState.update {
+            it.copy(form = it.form.copy(relationshipStatus = status), hasChanges = true)
+        }
+    }
+
+    fun searchBirthPlace(query: String) {
+        if (query.length < 3) {
+            _uiState.update { it.copy(birthPlaceSearchResults = emptyList()) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSearchingBirthPlace = true) }
+            when (val result = locationService.searchLocations(query, 5)) {
+                is LocationResult.Success -> {
+                    _uiState.update {
+                        it.copy(birthPlaceSearchResults = result.data, isSearchingBirthPlace = false)
+                    }
+                }
+                is LocationResult.Error -> {
+                    _uiState.update { it.copy(isSearchingBirthPlace = false) }
+                }
+            }
+        }
+    }
+
+    fun selectBirthPlace(location: GeocodedLocation) {
+        _uiState.update {
+            it.copy(
+                form = it.form.copy(
+                    birthPlace = location.displayName,
+                    birthPlaceLatitude = location.latitude,
+                    birthPlaceLongitude = location.longitude
+                ),
+                birthPlaceSearchResults = emptyList(),
+                hasChanges = true
+            )
+        }
+    }
+
+    fun clearBirthPlaceSearch() {
+        _uiState.update { it.copy(birthPlaceSearchResults = emptyList()) }
+    }
+
+    fun searchDeathPlace(query: String) {
+        if (query.length < 3) {
+            _uiState.update { it.copy(deathPlaceSearchResults = emptyList()) }
+            return
+        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSearchingDeathPlace = true) }
+            when (val result = locationService.searchLocations(query, 5)) {
+                is LocationResult.Success -> {
+                    _uiState.update {
+                        it.copy(deathPlaceSearchResults = result.data, isSearchingDeathPlace = false)
+                    }
+                }
+                is LocationResult.Error -> {
+                    _uiState.update { it.copy(isSearchingDeathPlace = false) }
+                }
+            }
+        }
+    }
+
+    fun selectDeathPlace(location: GeocodedLocation) {
+        _uiState.update {
+            it.copy(
+                form = it.form.copy(
+                    deathPlace = location.displayName,
+                    deathPlaceLatitude = location.latitude,
+                    deathPlaceLongitude = location.longitude
+                ),
+                deathPlaceSearchResults = emptyList(),
+                hasChanges = true
+            )
+        }
+    }
+
+    fun clearDeathPlaceSearch() {
+        _uiState.update { it.copy(deathPlaceSearchResults = emptyList()) }
+    }
+
     fun updateReligion(value: String) {
         _uiState.update {
             it.copy(form = it.form.copy(religion = value), hasChanges = true)
@@ -323,18 +466,26 @@ class EditMemberViewModel @Inject constructor(
                     val originalMember = _uiState.value.originalMember!!
                     val updatedMember = originalMember.copy(
                         firstName = form.firstName.trim(),
+                        middleName = form.middleName.trim().takeIf { it.isNotEmpty() },
                         lastName = form.lastName.trim().takeIf { it.isNotEmpty() },
                         maidenName = form.maidenName.trim().takeIf { it.isNotEmpty() },
                         nickname = form.nickname.trim().takeIf { it.isNotEmpty() },
                         gender = form.gender,
                         birthDate = form.birthDate,
                         birthPlace = form.birthPlace.trim().takeIf { it.isNotEmpty() },
+                        birthPlaceLatitude = form.birthPlaceLatitude,
+                        birthPlaceLongitude = form.birthPlaceLongitude,
                         deathDate = form.deathDate,
                         deathPlace = form.deathPlace.trim().takeIf { it.isNotEmpty() },
+                        deathPlaceLatitude = form.deathPlaceLatitude,
+                        deathPlaceLongitude = form.deathPlaceLongitude,
                         isLiving = form.isLiving,
                         biography = form.biography.trim().takeIf { it.isNotEmpty() },
                         occupation = form.occupation.trim().takeIf { it.isNotEmpty() },
                         education = form.education.trim().takeIf { it.isNotEmpty() },
+                        interests = form.interests,
+                        careerStatus = form.careerStatus,
+                        relationshipStatus = form.relationshipStatus,
                         religion = form.religion.trim().takeIf { it.isNotEmpty() },
                         nationality = form.nationality.trim().takeIf { it.isNotEmpty() },
                         notes = form.notes.trim().takeIf { it.isNotEmpty() },
@@ -360,13 +511,21 @@ class EditMemberViewModel @Inject constructor(
                     )
 
                     val fullMember = newMember.copy(
+                        middleName = form.middleName.trim().takeIf { it.isNotEmpty() },
                         maidenName = form.maidenName.trim().takeIf { it.isNotEmpty() },
                         nickname = form.nickname.trim().takeIf { it.isNotEmpty() },
+                        birthPlaceLatitude = form.birthPlaceLatitude,
+                        birthPlaceLongitude = form.birthPlaceLongitude,
                         deathDate = form.deathDate,
                         deathPlace = form.deathPlace.trim().takeIf { it.isNotEmpty() },
+                        deathPlaceLatitude = form.deathPlaceLatitude,
+                        deathPlaceLongitude = form.deathPlaceLongitude,
                         biography = form.biography.trim().takeIf { it.isNotEmpty() },
                         occupation = form.occupation.trim().takeIf { it.isNotEmpty() },
                         education = form.education.trim().takeIf { it.isNotEmpty() },
+                        interests = form.interests,
+                        careerStatus = form.careerStatus,
+                        relationshipStatus = form.relationshipStatus,
                         religion = form.religion.trim().takeIf { it.isNotEmpty() },
                         nationality = form.nationality.trim().takeIf { it.isNotEmpty() },
                         notes = form.notes.trim().takeIf { it.isNotEmpty() },

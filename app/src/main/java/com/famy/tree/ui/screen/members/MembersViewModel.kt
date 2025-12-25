@@ -7,13 +7,17 @@ import com.famy.tree.domain.model.FamilyMember
 import com.famy.tree.domain.model.Gender
 import com.famy.tree.domain.repository.FamilyMemberRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
@@ -41,7 +45,7 @@ data class MembersUiState(
     val error: String? = null
 )
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, FlowPreview::class)
 @HiltViewModel
 class MembersViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -60,6 +64,9 @@ class MembersViewModel @Inject constructor(
 
     private val allMembers = memberRepository.observeMembersByTree(treeId)
 
+    // Debounce search query to avoid filtering on every keystroke
+    private val debouncedSearchQuery = _searchQuery.debounce(300)
+
     val generations: StateFlow<List<Int>> = allMembers.map { members ->
         members.map { it.generation }.distinct().sorted()
     }.stateIn(
@@ -68,9 +75,10 @@ class MembersViewModel @Inject constructor(
         initialValue = emptyList()
     )
 
+    @Suppress("UNCHECKED_CAST")
     val uiState: StateFlow<MembersUiState> = combine(
         allMembers,
-        _searchQuery,
+        debouncedSearchQuery,
         _selectedGender,
         _selectedGeneration,
         _showLivingOnly,
@@ -83,19 +91,45 @@ class MembersViewModel @Inject constructor(
         val livingOnly = array[4] as Boolean
         val sort = array[5] as MemberSortOption
 
-        val filtered = members.filter { member ->
-            val matchesQuery = query.isEmpty() ||
-                    member.firstName.contains(query, ignoreCase = true) ||
-                    member.lastName?.contains(query, ignoreCase = true) == true ||
-                    member.nickname?.contains(query, ignoreCase = true) == true
+        filterAndSortMembers(members, query, gender, generation, livingOnly, sort)
+    }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = MembersUiState()
+        )
 
-            val matchesGender = gender == null || member.gender == gender
-            val matchesGeneration = generation == null || member.generation == generation
-            val matchesLiving = !livingOnly || member.isLiving
+    private fun filterAndSortMembers(
+        members: List<FamilyMember>,
+        query: String,
+        gender: Gender?,
+        generation: Int?,
+        livingOnly: Boolean,
+        sort: MemberSortOption
+    ): MembersUiState {
+        // Cache lowercase query for case-insensitive comparison
+        val queryLower = query.lowercase()
 
-            matchesQuery && matchesGender && matchesGeneration && matchesLiving
+        val filtered = if (query.isEmpty() && gender == null && generation == null && !livingOnly) {
+            // Fast path: no filtering needed
+            members
+        } else {
+            members.filter { member ->
+                val matchesQuery = query.isEmpty() ||
+                        member.firstName.lowercase().contains(queryLower) ||
+                        member.lastName?.lowercase()?.contains(queryLower) == true ||
+                        member.nickname?.lowercase()?.contains(queryLower) == true
+
+                val matchesGender = gender == null || member.gender == gender
+                val matchesGeneration = generation == null || member.generation == generation
+                val matchesLiving = !livingOnly || member.isLiving
+
+                matchesQuery && matchesGender && matchesGeneration && matchesLiving
+            }
         }
 
+        // Sort with pre-computed keys to avoid repeated calculations
         val sorted = when (sort) {
             MemberSortOption.NAME_ASC -> filtered.sortedBy { it.fullName.lowercase() }
             MemberSortOption.NAME_DESC -> filtered.sortedByDescending { it.fullName.lowercase() }
@@ -105,7 +139,7 @@ class MembersViewModel @Inject constructor(
             MemberSortOption.RECENT -> filtered.sortedByDescending { it.updatedAt }
         }
 
-        MembersUiState(
+        return MembersUiState(
             members = members,
             filteredMembers = sorted,
             isLoading = false,
@@ -117,11 +151,7 @@ class MembersViewModel @Inject constructor(
             totalCount = members.size,
             filteredCount = sorted.size
         )
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = MembersUiState()
-    )
+    }
 
     fun setSearchQuery(query: String) {
         _searchQuery.value = query

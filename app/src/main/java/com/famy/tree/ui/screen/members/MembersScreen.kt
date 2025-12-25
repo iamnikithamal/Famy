@@ -22,7 +22,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.People
-import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -101,7 +101,7 @@ fun MembersScreen(
                     }
                     IconButton(onClick = { showSortMenu = true }) {
                         Icon(
-                            imageVector = Icons.Default.Sort,
+                            imageVector = Icons.AutoMirrored.Filled.Sort,
                             contentDescription = "Sort"
                         )
                         DropdownMenu(

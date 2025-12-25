@@ -1,97 +1,70 @@
-# Continuity Ledger - Famy Family Tree App
+# Continuity Ledger - Famy Family Tree App Enhancement
 
 ## Goal (incl. success criteria)
-Build a production-grade Android family tree app "Famy" from scratch with:
-- Material 3 Jetpack Compose UI with Poppins fonts
-- Offline-first local storage (Room DB)
-- High-performance Canvas-based tree visualization (viewport culling, lazy loading)
-- Complete feature set: Home Dashboard, Interactive Tree, Member Profiles, Relationships, Search, Timeline, Statistics, Media Gallery, Import/Export (GEDCOM/JSON), Settings
-- Global crash handler with debug activity
-- Onboarding flow
-- Custom app icon with tree/F motif
-- GitHub Actions CI/CD with signed APK
-- Package: com.famy.tree
+Major enhancement of the Famy Android app focusing on:
+1. **Performance Optimization** - Buttery smooth tree rendering with 100s of members via virtualization/lazy loading
+2. **Enhanced UI/UX** - Modern, minimal, professional, responsive design throughout
+3. **Enhanced Member Addition** - More fields (middle name, education, interests, career status, relationship status, etc.) with presets
+4. **Map Integration** - Free API integration (Nominatim/Photon) for location selection with coordinate storage
+5. **Tree Canvas Improvements** - Profile pictures, better node UI, functional features
+6. **Lint Fixes** - Fix all deprecation warnings and API level issues
+7. **GitHub Workflow Cleanup** - Remove debug APK build, keep only release APK + lint
+8. **Create idea.md** - 15+ innovative feature ideas for future development
 
-Success criteria: Fully functional, production-grade app that builds, runs, and handles large family trees smoothly.
+Success criteria: Production-grade app with zero lint errors, smooth performance on low-end devices, professional UI/UX.
 
 ## Constraints/Assumptions
-- Kotlin + Jetpack Compose only
-- Material 3 + Material Icons
-- Poppins font family
-- Offline-first (Room database)
-- Performance critical: Canvas-based tree rendering with culling
+- Kotlin + Jetpack Compose only (Material 3)
+- Offline-first (Room database, no cloud/auth/external DB)
+- No paid APIs - use free alternatives (Nominatim, Photon for geocoding)
 - Modular code: 500-1000 lines per file max
 - No TODOs or placeholder implementations
-- Public keystore for open-source signing
 - Min SDK 24, Target SDK 35
+- All changes must be production-grade, fully functional
 
 ## Key Decisions
-- Architecture: MVVM + Repository pattern + Clean Architecture layers
-- DI: Hilt
-- Database: Room with Flow for reactive updates
-- Navigation: Compose Navigation with bottom nav + drawer
-- Tree rendering: Custom Canvas composable with viewport culling
-- State management: ViewModel + StateFlow
-- Image loading: Coil
+- **Map Integration**: Use Nominatim (free OSM geocoding) + Photon (fast free geocoding) as dual providers with fallback
+- **Tree Rendering**: Canvas-based with viewport culling (already implemented), enhance with profile photo support
+- **Model Enhancement**: Add middleName, education, interests, careerStatus, relationshipStatus, locations with coordinates
+- **Lint Fixes**: Use AutoMirrored icons, BasicAlertDialog, enable edge-to-edge, fix API 28 check for longVersionCode
 
 ## State
 
-### Done (Previous Session - ~30-35% complete)
-- Project structure and Gradle configuration
-- Data layer: 5 entities, 5 DAOs, database, converters
-- Repository implementations (5 complete)
-- Domain models (7), use cases (tree, member, statistics)
-- UI: HomeScreen/ViewModel, TreeScreen/ViewModel (partial)
-- Navigation routes and NavGraph structure
-- CrashHandler + CrashActivity
-- FamyApplication with Hilt + Coil
-- AndroidManifest configuration
-- Theme setup (Color, Type, Theme)
-- Common components and dialogs (partial)
-- Splash icon drawable (fixed radius attribute errors - added dp units)
-- Fixed TimelineViewModel compilation errors:
-  - Changed `event.type.contains()` to proper enum comparison `when (event.type) { LifeEventKind.MARRIAGE -> ... }`
-  - Changed `event.location` to `event.eventPlace` (correct property name from LifeEvent model)
+### Done (Previous Session)
+- Complete app structure with MVVM + Clean Architecture
+- All screens implemented: Home, Tree, Members, Profile, Editor, Relationships, Gallery, Timeline, Statistics, Settings, Search, Onboarding
+- Room database with 5 entities
+- Tree visualization with Canvas (needs enhancement)
+- GitHub Actions workflow (needs cleanup)
 
 ### Now
-- Completed TimelineViewModel fixes
+- Starting comprehensive enhancement task
 
 ### Next (Priority Order)
-1. MainActivity - app entry point
-2. TreeCanvas - Canvas-based tree rendering with viewport culling
-3. OnboardingScreen - first-time user flow
-4. MembersScreen + MembersViewModel - member list
-5. ProfileScreen + ProfileViewModel - member details
-6. EditMemberScreen + EditMemberViewModel - create/edit members
-7. AddRelationshipScreen - relationship editor
-8. SearchScreen + SearchViewModel - search & filter
-9. TimelineScreen + TimelineViewModel - chronological events
-10. StatisticsScreen + StatisticsViewModel - family analytics
-11. GalleryScreen + GalleryViewModel - media gallery
-12. SettingsScreen + SettingsViewModel - app settings
-13. Import/Export functionality
-14. App icon generation (mipmap assets)
-15. Keystore creation
-16. GitHub Actions workflow
+1. Fix all lint errors (deprecations + API level issues)
+2. Cleanup GitHub workflow file
+3. Enhance FamilyMember model + Entity with new fields
+4. Create location picker with map integration (Nominatim + Photon APIs)
+5. Enhance EditMemberScreen with new fields (education, interests, career/relationship status)
+6. Improve TreeCanvas with profile pictures, better node design
+7. Performance optimization throughout
+8. Create idea.md with 15+ innovative ideas
 
 ## Open Questions
 - None currently
 
 ## Working Set
-- Root: /workspace/repo-7a8c9db4-b146-4581-b426-cecb94a648e8
+- Root: /workspace/repo-9aa8ef24-e558-4bfe-a0ef-123cab716824
 - Main package: app/src/main/java/com/famy/tree/
-- Key files to create:
-  - ui/activity/MainActivity.kt
-  - ui/component/TreeCanvas.kt
-  - ui/screen/onboarding/OnboardingScreen.kt
-  - ui/screen/members/MembersScreen.kt + MembersViewModel.kt
-  - ui/screen/profile/ProfileScreen.kt + ProfileViewModel.kt
-  - ui/screen/editor/EditMemberScreen.kt + EditMemberViewModel.kt
-  - ui/screen/relationship/AddRelationshipScreen.kt + AddRelationshipViewModel.kt
-  - ui/screen/search/SearchScreen.kt + SearchViewModel.kt
-  - ui/screen/timeline/TimelineScreen.kt + TimelineViewModel.kt
-  - ui/screen/statistics/StatisticsScreen.kt + StatisticsViewModel.kt
-  - ui/screen/gallery/GalleryScreen.kt + GalleryViewModel.kt
-  - ui/screen/settings/SettingsScreen.kt + SettingsViewModel.kt
-  - .github/workflows/android.yml
-  - keystore/famy-release.jks
+- Files to fix (lint errors):
+  - CommonComponents.kt:388 - Icons.Filled.ArrowBack → AutoMirrored
+  - GalleryScreen.kt:157 - Icons.Filled.ViewList → AutoMirrored
+  - GalleryScreen.kt:629 - AlertDialog → BasicAlertDialog
+  - GalleryScreen.kt:805 - Icons.Filled.InsertDriveFile → AutoMirrored
+  - MembersScreen.kt:104 - Icons.Filled.Sort → AutoMirrored
+  - MembersViewModel.kt:79 - Unchecked cast fix
+  - ProfileViewModel.kt:70-72 - Unchecked cast fixes (3 instances)
+  - AddRelationshipScreen.kt:321 - Icons.Filled.Notes → AutoMirrored
+  - Theme.kt:102-103 - statusBarColor/navigationBarColor deprecation
+  - CrashHandler.kt:77 - longVersionCode API level check
+- .github/workflows/android.yml - Remove debug build, keystore upload
